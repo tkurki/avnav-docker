@@ -1,8 +1,9 @@
-FROM debian:bullseye
+FROM --platform=linux/arm64 debian:bullseye
 
 COPY files .
 
 RUN apt-get update
+RUN apt-get upgrade
 RUN apt-get install -y python3-bluez \
 python3-pyudev \
 python3-serial \
@@ -12,10 +13,11 @@ python3-pil \
 python3-pigpio \
 gnupg
 
-RUN apt-key add - < ./oss.boating.gpg.key && \
-echo 'deb https://www.free-x.de/debian bullseye main contrib non-free' >/etc/apt/sources.list.d/avnav.list && \
-echo '#deb https://open-mind.space/repo/ bullseye-stable avnav' >>/etc/apt/sources.list.d/avnav.list && \
-echo '#deb https://open-mind.space/repo/ bullseye-daily avnav' >>/etc/apt/sources.list.d/avnav.list && \
-apt-get update
-RUN apt-get install -y avnav
-ENTRYPOINT [ "/usr/bin/avnav" ]
+RUN apt-key add - < ./oss.boating.gpg.key
+RUN mv oss.boating.gpg /usr/share/keyrings/
+
+RUN \
+echo '#deb [signed-by=/usr/share/keyrings/oss.boating.gpg] https://www.free-x.de/debpreview bullseye main contrib non-free' >/etc/apt/sources.list.d/bullseye-extra.list && \
+echo 'deb [signed-by=/usr/share/keyrings/oss.boating.gpg] https://www.free-x.de/debian bullseye main contrib non-free' >/etc/apt/sources.list.d/bullseye-extra.list
+RUN apt-get update 
+RUN apt-get install -y avnav-ocharts-plugin
